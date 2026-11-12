@@ -21,6 +21,7 @@ WORKDIR /app/backend
 RUN npx prisma generate && npm run build
 
 ENV NODE_ENV=production
+ENV HOST=0.0.0.0
 ENV PATH="/opt/hardware-venv/bin:$PATH"
 EXPOSE 3001
-CMD ["node", "dist/index.js"]
+CMD ["npm", "run", "start"]
