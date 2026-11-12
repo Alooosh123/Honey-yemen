@@ -1,6 +1,6 @@
 # Arduino Uno firmware
 
-Upload `HoneyYemenDevice.ino` to the Arduino Uno.
+Upload `HoneyYemenDevice/HoneyYemenDevice.ino` to the Arduino Uno.
 
 ## Libraries
 
