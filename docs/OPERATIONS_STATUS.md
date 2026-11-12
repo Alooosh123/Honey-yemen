@@ -15,6 +15,7 @@ Updated: 2026-11-12
 - Barcode verification now distinguishes a registered code from authenticity verification and masks legacy demo verdicts.
 - Added a dedicated /verify?code=... route.
 - Disabled demo login token issuance and unauthenticated merchant, SaaS admin, and checkout mutations.
+- Restricted bulk and internal report APIs; public barcode verification now returns a minimized record and a barcode-scoped PDF.
 - Product listing is gated on a sample record explicitly marked VERIFIED.
 - Added .env examples, a safer local Docker Compose setup, a Windows startup script, runtime data migration away from the tracked seed file, .gitignore, PostgreSQL migrations, and CI jobs for backend/frontend builds, Prisma migrations, serial protocol, Arduino compile and PowerShell syntax.
 
