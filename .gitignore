@@ -1,0 +1,17 @@
+# Runtime secrets and environment files
+.env
+.env.*
+!.env.example
+**/.env.local
+backend/.env
+frontend/.env.local
+
+# Runtime data and generated reports
+backend/data/honey_db.runtime.json
+backend/data/*.tmp
+backend/public/reports/
+
+# Dependencies and build outputs
+**/node_modules/
+**/.next/
+**/coverage/
