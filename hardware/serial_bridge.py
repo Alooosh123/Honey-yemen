@@ -57,7 +57,7 @@ def parse_line(line: str) -> tuple[str, Any] | None:
         value = parse_number(parts[1], "UV")
         if value < 0 or value > 65535:
             raise ValueError("UV raw reading must be between 0 and 65535")
-        return "uv", {"raw": value, "unit": os.getenv("HONEY_UV_UNIT", "raw_or_voltage")}
+        return "uv", {"raw": value, "unit": os.getenv("HONEY_UV_UNIT", "raw_adc")}
 
     if kind == "IR_DATA":
         if len(parts) != 2:
@@ -113,6 +113,9 @@ def main() -> int:
 
                 try:
                     parsed = parse_line(line)
+                except RuntimeError as exc:
+                    emit({"event": "error", "message": str(exc), "line": line[:160]})
+                    return 4
                 except Exception as exc:
                     emit({"event": "warning", "message": str(exc), "line": line[:160]})
                     continue
