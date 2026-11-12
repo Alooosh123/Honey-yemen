@@ -63,8 +63,18 @@ router.get('/diseases', (_req, res) => {
 });
 
 // Get honey types encyclopedia
-router.get('/honey-types', (req, res) => {
-  res.json({ honeyTypes: dbStore.getHoneyTypes() });
+router.get('/honey-types', (_req, res) => {
+  const honeyTypes = dbStore.getHoneyTypes().map((type) => ({
+    id: type.id,
+    nameAr: type.nameAr,
+    nameEn: type.nameEn,
+    description: type.description,
+    region: type.region,
+  }));
+  res.json({
+    honeyTypes,
+    message: 'معلومات تعريفية فقط؛ لم يتم اعتماد بصمات كيميائية أو فوائد علاجية لكل نوع داخل النظام.',
+  });
 });
 
 // Customer Checkout / Create Order
