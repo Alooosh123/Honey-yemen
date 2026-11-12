@@ -83,7 +83,7 @@ export class HardwareService {
       child.stdout.setEncoding('utf8');
       child.stdout.on('data', (chunk: string) => {
         stdoutBuffer += chunk;
-        const lines = stdoutBuffer.split(/\\r?\\n/);
+        const lines = stdoutBuffer.split(/\r?\n/);
         stdoutBuffer = lines.pop() || '';
 
         for (const line of lines) {
