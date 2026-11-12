@@ -85,7 +85,7 @@ if ($rootContent -match 'CHANGE_THIS_TO_ANOTHER_LONG_RANDOM_PASSWORD') {
 if ($rootContent -match 'CHANGE_THIS_TO_A_LONG_RANDOM_TOKEN') {
     $rootContent = $rootContent.Replace('CHANGE_THIS_TO_A_LONG_RANDOM_TOKEN', (New-RandomHex 48))
 }
-[System.IO.File]::WriteAllText($rootEnv, $rootContent, (New-Object System.Text.UTF8Encoding($false)))
+[System.IO.File]::WriteAllText($rootEnv, $rootContent, ([System.Text.UTF8Encoding]::new($false)))
 Set-EnvValue $backendEnv 'HONEY_SERIAL_PORT' $SerialPort
 
 Write-Step 'Installing dependencies'
