@@ -125,7 +125,7 @@ def main() -> int:
                     continue
 
                 readings[kind] = value
-                percent = {"color": 40, "uv": 65, "ir": 85}[kind]
+                percent = 25 + len(readings) * 20
                 emit({"event": "data", "type": kind, "data": value, "percent": percent})
 
                 if all(key in readings for key in ("color", "uv", "ir")):
