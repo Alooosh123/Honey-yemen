@@ -24,12 +24,12 @@ export interface HoneyTypeInfo {
   therapeuticBenefits: string[];
   recommendedUses: string[];
   standardCharacteristics: {
-    fructose: number | null; // %
-    glucose: number | null;  // %
-    sucrose: number | null;  // %
-    moisture: number | null; // %
+    fructose: number; // %
+    glucose: number;  // %
+    sucrose: number;  // %
+    moisture: number; // %
     hmfMax: number;   // mg/kg
-    density: number | null;  // g/cm3
+    density: number;  // g/cm3
   };
 }
 
@@ -51,12 +51,12 @@ export interface HoneySampleRecord {
   qualityScore: number | null;
   isPure: boolean | null;
   chemicalAnalysis: {
-    fructose: number;
-    glucose: number;
-    sucrose: number;
-    moisture: number;
+    fructose: number | null;
+    glucose: number | null;
+    sucrose: number | null;
+    moisture: number | null;
     hmf: number | null;
-    density: number;
+    density: number | null;
     vocIndex: number | null;
     colorSpectrumChannels: number[];
     nirPeakAbsorbance: number | null;
