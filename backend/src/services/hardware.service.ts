@@ -66,12 +66,6 @@ export class HardwareService {
       let stderrBuffer = '';
       let settled = false;
 
-      if (!child.stdout || !child.stderr) {
-        child.kill();
-        finish(new Error('Python serial bridge did not expose process streams.'));
-        return;
-      }
-
       const timer = setTimeout(() => {
         child.kill();
         finish(new Error('Hardware scan exceeded ' + (scanTimeout + 10) + ' seconds.'));
@@ -86,8 +80,8 @@ export class HardwareService {
         else reject(new Error('Hardware bridge exited without a completed measurement set.'));
       };
 
-      child.stdout.setEncoding('utf8');
-      child.stdout.on('data', (chunk: string) => {
+      child.stdout!.setEncoding('utf8');
+      child.stdout!.on('data', (chunk: string) => {
         stdoutBuffer += chunk;
         const lines = stdoutBuffer.split(/\r?\n/);
         stdoutBuffer = lines.pop() || '';
@@ -125,8 +119,8 @@ export class HardwareService {
         }
       });
 
-      child.stderr.setEncoding('utf8');
-      child.stderr.on('data', (chunk: string) => {
+      child.stderr!.setEncoding('utf8');
+      child.stderr!.on('data', (chunk: string) => {
         stderrBuffer = (stderrBuffer + chunk).slice(-4000);
       });
 
