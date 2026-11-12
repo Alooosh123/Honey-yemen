@@ -10,7 +10,7 @@
 - GY-ML8511: خرج UV الخام؛ لا يُفترض أنه طول موجي أو HMF.
 - GY-906 / MLX90614: درجة حرارة الجسم بالأشعة تحت الحمراء.
 
-يوجد Firmware أولي في `hardware/arduino/HoneyYemenDevice.ino` للحساسات الفعلية، مع تعليمات التوصيل والمكتبات في `hardware/arduino/README.md`. لا يفترض هذا الإصدار وجود NeoSpectra أو AS7341 أو VEML6075 أو MLX90640 أو HX711 أو BME688.
+يوجد Firmware أولي في `hardware/arduino/HoneyYemenDevice/HoneyYemenDevice.ino` للحساسات الفعلية، مع تعليمات التوصيل والمكتبات في `hardware/arduino/README.md`. لا يفترض هذا الإصدار وجود NeoSpectra أو AS7341 أو VEML6075 أو MLX90640 أو HX711 أو BME688.
 
 ## متطلبات التشغيل على Windows
 
