@@ -1,32 +1,43 @@
-version: '3.8'
+name: honey-yemen
 
+# PostgreSQL and InfluxDB run in Docker. On Windows, run the backend on the host
+# so it can open the Arduino COM port directly.
 services:
   postgres:
-    image: postgres:15
-    container_name: honey-postgres
+    image: postgres:16-alpine
     environment:
-      POSTGRES_USER: honey_admin
-      POSTGRES_PASSWORD: honey_password
-      POSTGRES_DB: honey_quality
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     restart: unless-stopped
 
   influxdb:
     image: influxdb:2.7
-    container_name: honey-influxdb
-    ports:
-      - "8086:8086"
     environment:
       DOCKER_INFLUXDB_INIT_MODE: setup
-      DOCKER_INFLUXDB_INIT_USERNAME: honey_admin
-      DOCKER_INFLUXDB_INIT_PASSWORD: honey_password123
-      DOCKER_INFLUXDB_INIT_ORG: honey_org
-      DOCKER_INFLUXDB_INIT_BUCKET: sensor_data
+      DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUXDB_ADMIN_USERNAME:?Set INFLUXDB_ADMIN_USERNAME in .env}
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUXDB_ADMIN_PASSWORD:?Set INFLUXDB_ADMIN_PASSWORD in .env}
+      DOCKER_INFLUXDB_INIT_ORG: ${INFLUXDB_ORG:?Set INFLUXDB_ORG in .env}
+      DOCKER_INFLUXDB_INIT_BUCKET: ${INFLUXDB_BUCKET:?Set INFLUXDB_BUCKET in .env}
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_ADMIN_TOKEN:?Set INFLUXDB_ADMIN_TOKEN in .env}
+    ports:
+      - "127.0.0.1:8086:8086"
     volumes:
       - influxdb_data:/var/lib/influxdb2
+    healthcheck:
+      test: ["CMD", "influx", "ping", "--host", "http://localhost:8086"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
     restart: unless-stopped
 
 volumes:
