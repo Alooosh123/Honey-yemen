@@ -74,7 +74,7 @@ export default function MerchantPortalView({
       }
 
       // Fetch orders
-      const orderRes = await fetch('${API_BASE_URL}/api/marketplace/orders');
+      const orderRes = await fetch(API_BASE_URL + '/api/marketplace/orders');
       if (orderRes.ok) {
         const orderData = await orderRes.json();
         setOrders(orderData.orders || []);
