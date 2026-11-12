@@ -11,6 +11,7 @@ export let io: Server;
 const aiService = new AIService();
 const pdfService = new PDFService();
 const activeScans = new Set<string>();
+let hardwareScanInProgress = false;
 
 export const setupWebSockets = (server: HttpServer) => {
   const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000')
@@ -34,13 +35,19 @@ export const setupWebSockets = (server: HttpServer) => {
         return;
       }
 
-      activeScans.add(socket.id);
+      if (hardwareScanInProgress) {
+        socket.emit('scan_error', { message: 'منفذ Arduino مشغول بفحص آخر. انتظر انتهاء الفحص الحالي.' });
+        return;
+      }
+
       const batchNumber = String(data?.batchNumber || '').trim();
       if (!batchNumber || batchNumber.length > 80) {
-        activeScans.delete(socket.id);
         socket.emit('scan_error', { message: 'رقم الدفعة مطلوب ويجب ألا يتجاوز 80 حرفاً.' });
         return;
       }
+
+      activeScans.add(socket.id);
+      hardwareScanInProgress = true;
 
       const honeyType = String(data?.honeyType || 'غير محدد');
       const shopId = String(data?.shopId || '');
@@ -141,6 +148,7 @@ export const setupWebSockets = (server: HttpServer) => {
         socket.emit('scan_error', { message });
       } finally {
         activeScans.delete(socket.id);
+        hardwareScanInProgress = false;
       }
     });
 
