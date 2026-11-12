@@ -1,5 +1,6 @@
 "use client";
 
+import { API_BASE_URL } from '@/lib/api';
 import React, { useState, useEffect } from 'react';
 import { 
   Search, 
@@ -87,7 +88,7 @@ export default function MarketplaceView({
       if (selectedHoneyType !== 'ALL') params.append('honeyType', selectedHoneyType);
       if (searchQuery) params.append('search', searchQuery);
 
-      const res = await fetch(`http://localhost:3001/api/marketplace/products?${params.toString()}`);
+      const res = await fetch(`${API_BASE_URL}/api/marketplace/products?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setProducts(data.products || []);
