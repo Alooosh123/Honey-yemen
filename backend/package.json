@@ -6,9 +6,11 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "build": "tsc",
+    "build": "prisma generate && tsc",
     "prisma:generate": "prisma generate",
-    "prisma:push": "prisma db push"
+    "prisma:push": "prisma db push",
+    "prisma:deploy": "prisma migrate deploy",
+    "test:hardware": "python hardware/serial_bridge.py"
   },
   "dependencies": {
     "@influxdata/influxdb-client": "^1.33.2",
