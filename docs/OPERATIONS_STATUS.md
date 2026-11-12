@@ -9,17 +9,17 @@ Updated: 2026-11-12
 - Added a global hardware scan lock so only one scan can own the COM port at a time.
 - Replaced HardwareService mock generator in the scan path with the serial bridge.
 - Replaced the current AIService result with an explicit NOT_EVALUATED response until reference data and validation exist.
-- Scan records now persist the real RGB/UV/IR measurements in the existing JSON store.
+- New live RGB/UV/IR measurement records now persist in PostgreSQL through Prisma migrations; legacy demo/catalogue records remain in the separate JSON runtime store.
 - PDF output is a raw technical measurement report, not a fake purity or ISO compliance certificate.
 - Barcode verification now distinguishes a registered code from authenticity verification and masks legacy demo verdicts.
 - Added a dedicated /verify?code=... route.
 - Disabled demo login token issuance and unauthenticated merchant, SaaS admin, and checkout mutations.
 - Product listing is gated on a sample record explicitly marked VERIFIED.
-- Added .env examples, a safer local Docker Compose setup, hardware setup notes, runtime data migration away from the tracked seed file, .gitignore, and CI jobs including an Arduino Uno compile.
+- Added .env examples, a safer local Docker Compose setup, a Windows startup script, runtime data migration away from the tracked seed file, .gitignore, PostgreSQL migrations, and CI jobs for backend/frontend builds, Prisma migrations, serial protocol, Arduino compile and PowerShell syntax.
 
 ## Not yet production-ready
 
-- Application data currently persists in an ignored runtime JSON file migrated from the tracked seed JSON on first startup. PostgreSQL and InfluxDB are provisioned by Compose but application repository migration is pending.
+- Application catalogue/configuration records remain in the ignored runtime JSON store. InfluxDB is provisioned by Compose but application time-series writes are not integrated.
 - Authentication, password storage, JWT/session handling, first-admin provisioning and RBAC are not implemented. Sensitive writes have been disabled rather than left open.
 - The new Arduino sketch still must be uploaded and validated against the exact physical modules, supply voltages, wiring, optical arrangement and calibration settings.
 - Physical sensor acquisition has not been exercised against the user's device in this environment. CI parser tests and Arduino compile are added but have not yet been confirmed green.
