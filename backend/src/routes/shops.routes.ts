@@ -1,97 +1,55 @@
 import { Router } from 'express';
-import { dbStore, HoneyProduct } from '../db/store';
-import { randomUUID } from 'crypto';
+import { dbStore } from '../db/store';
 
 const router = Router();
 
-// Get all shops (filter by search visibility for customer storefront)
-router.get('/', (req, res) => {
-  const { visibleOnly } = req.query;
-  let shops = dbStore.getShops();
-
-  if (visibleOnly === 'true') {
-    shops = shops.filter((s) => s.isVisibleInSearch && s.subscriptionStatus === 'ACTIVE');
-  }
+// Public directory exposes only shops with at least one verified listed product.
+router.get('/', (_req, res) => {
+  const verifiedSampleIds = new Set(
+    dbStore.getSamples()
+      .filter((sample) => sample.analysisStatus === 'VERIFIED')
+      .map((sample) => sample.id)
+  );
+  const verifiedShopIds = new Set(
+    dbStore.getProducts()
+      .filter((product) => verifiedSampleIds.has(product.sampleId))
+      .map((product) => product.shopId)
+  );
+  const shops = dbStore.getShops()
+    .filter((shop) => shop.isVisibleInSearch && verifiedShopIds.has(shop.id))
+    .map((shop) => ({
+      id: shop.id,
+      name: shop.name,
+      city: shop.city,
+      region: shop.region,
+      logo: shop.logo,
+      rating: shop.rating,
+      isVerified: true,
+    }));
 
   res.json({ shops });
 });
 
-// Get shop details by ID
-router.get('/:id', (req, res) => {
-  const shop = dbStore.getShopById(req.params.id);
-  if (!shop) {
-    return res.status(404).json({ error: 'Shop not found' });
-  }
-
-  const products = dbStore.getProducts().filter((p) => p.shopId === shop.id);
-  const scans = dbStore.getSamples().filter((s) => s.shopId === shop.id);
-
-  res.json({
-    shop,
-    products,
-    scans,
+// Merchant details and all private shop records require authentication and RBAC.
+router.get('/:id', (_req, res) => {
+  res.status(503).json({
+    error: 'MERCHANT_ACCESS_LOCKED',
+    message: 'بيانات التاجر وسجلاته تتطلب تسجيل دخول وصلاحيات لم يتم تفعيلها بعد.',
   });
 });
 
-// Merchant adds product after laboratory scan
-router.post('/:id/products', (req, res) => {
-  const shop = dbStore.getShopById(req.params.id);
-  if (!shop) {
-    return res.status(404).json({ error: 'Shop not found' });
-  }
-
-  const {
-    nameAr,
-    nameEn,
-    honeyTypeId,
-    sampleId,
-    barcode,
-    price,
-    weightGrams,
-    stockQuantity,
-    treatedDiseases,
-    descriptionAr,
-    imageUrl,
-  } = req.body;
-
-  if (!barcode) {
-    return res.status(400).json({ error: 'Barcode from certified lab scan is required' });
-  }
-
-  const newProduct: HoneyProduct = {
-    id: `prod-${randomUUID().slice(0, 8)}`,
-    nameAr: nameAr || 'عسل يمني فاخر مفحوص',
-    nameEn: nameEn || 'Certified Yemeni Honey',
-    honeyTypeId: honeyTypeId || 'type-sidr-doani',
-    shopId: shop.id,
-    shopName: shop.name,
-    sampleId: sampleId || '',
-    barcode,
-    price: Number(price) || 80,
-    currency: 'USD',
-    weightGrams: Number(weightGrams) || 1000,
-    stockQuantity: Number(stockQuantity) || 20,
-    purityScore: 99.8,
-    treatedDiseases: Array.isArray(treatedDiseases) ? treatedDiseases : ['تقوية المناعة', 'صحة الجهاز الهضمي'],
-    imageUrl: imageUrl || 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=600&q=80',
-    descriptionAr: descriptionAr || 'عسل طبيعي خالص وموثق بباركود الفحص المخبري.',
-    badge: 'مفحوص وموثق 100%',
-    rating: 5.0,
-    reviewsCount: 1,
-  };
-
-  dbStore.addProduct(newProduct);
-  res.status(201).json({ success: true, product: newProduct });
+router.post('/:id/products', (_req, res) => {
+  res.status(503).json({
+    error: 'PRODUCT_PUBLISHING_LOCKED',
+    message: 'نشر المنتجات متوقف حتى تفعيل مصادقة التاجر وربط المنتج بسجل عينة معتمد فعلياً.',
+  });
 });
 
-// Toggle shop search visibility (Admin SaaS)
-router.patch('/:id/visibility', (req, res) => {
-  const { isVisible } = req.body;
-  const updated = dbStore.toggleShopVisibility(req.params.id, Boolean(isVisible));
-  if (!updated) {
-    return res.status(404).json({ error: 'Shop not found' });
-  }
-  res.json({ success: true, shop: updated });
+router.patch('/:id/visibility', (_req, res) => {
+  res.status(503).json({
+    error: 'SHOP_ADMIN_LOCKED',
+    message: 'تغيير حالة ظهور المتاجر يتطلب مصادقة مدير وصلاحيات RBAC غير مفعّلة بعد.',
+  });
 });
 
 export default router;

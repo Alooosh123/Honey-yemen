@@ -6,54 +6,82 @@ import { HardwareService } from '../services/hardware.service';
 import { AIService } from '../services/ai.service';
 import { PDFService } from '../services/pdf.service';
 import { dbStore, HoneySampleRecord } from '../db/store';
+import { measurementRepository } from '../db/measurement.repository';
 
 export let io: Server;
 const aiService = new AIService();
 const pdfService = new PDFService();
+const activeScans = new Set<string>();
+let hardwareScanInProgress = false;
 
 export const setupWebSockets = (server: HttpServer) => {
+  const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
   io = new Server(server, {
     cors: {
-      origin: '*',
+      origin: allowedOrigins,
       methods: ['GET', 'POST'],
     },
   });
 
   io.on('connection', (socket: Socket) => {
-    console.log(`[Socket] Client connected: ${socket.id}`);
+    console.log('[Socket] Client connected: ' + socket.id);
 
     socket.on('start_scan', async (data) => {
-      const batchNumber = data?.batchNumber || `BCH-${Math.floor(1000 + Math.random() * 9000)}`;
-      const honeyType = data?.honeyType || 'Sidr Doani';
-      const shopId = data?.shopId || 'shop-1';
-      const shop = dbStore.getShopById(shopId);
-      const shopName = shop ? shop.name : (data?.shopName || 'مناحل وادي دوعن الملكية');
-      const originRegion = data?.originRegion || (shop ? shop.region : 'وادي دوعن، حضرموت');
-      const isSimulatedAdulterated = Boolean(data?.isSimulatedAdulterated);
+      if (activeScans.has(socket.id)) {
+        socket.emit('scan_error', { message: 'يوجد فحص قيد التنفيذ لهذه الجلسة بالفعل.' });
+        return;
+      }
 
-      console.log(`[Socket] Received start_scan command for batch: ${batchNumber} (${honeyType})`);
-      const sampleId = `sample-${randomUUID().slice(0, 8)}`;
-      const barcode = `HONEY-${batchNumber.replace(/[^a-zA-Z0-9]/g, '')}-${Math.floor(100 + Math.random() * 900)}`;
+      if (hardwareScanInProgress) {
+        socket.emit('scan_error', { message: 'منفذ Arduino مشغول بفحص آخر. انتظر انتهاء الفحص الحالي.' });
+        return;
+      }
+
+      const batchNumber = String(data?.batchNumber || '').trim();
+      if (!batchNumber || batchNumber.length > 80) {
+        socket.emit('scan_error', { message: 'رقم الدفعة مطلوب ويجب ألا يتجاوز 80 حرفاً.' });
+        return;
+      }
+
+      activeScans.add(socket.id);
+      hardwareScanInProgress = true;
+
+      const honeyType = String(data?.honeyType || 'غير محدد');
+      const shopId = String(data?.shopId || '');
+      const shop = shopId ? dbStore.getShopById(shopId) : undefined;
+      const shopName = shop?.name || String(data?.shopName || 'غير محدد');
+      const originRegion = String(data?.originRegion || shop?.region || 'غير محدد');
+      const sampleId = 'sample-' + randomUUID();
+      const barcode = 'HNY-' + randomUUID().replace(/-/g, '').slice(0, 16).toUpperCase();
 
       try {
+        if (!(await measurementRepository.isAvailable())) {
+          throw new Error('PostgreSQL is not ready. The scan was not started to avoid losing physical sensor measurements.');
+        }
+
         const hardwareService = new HardwareService();
-        const sensorData = await hardwareService.simulateScanSequence(socket, {
+        const readings = await hardwareService.acquireScan(socket, {
           batchNumber,
           honeyType,
           originRegion,
           shopId,
           shopName,
-          isSimulatedAdulterated,
         });
 
-        socket.emit('scan_progress', { stage: 'تحليل البصمة الطيفية والكيميائية بالذكاء الاصطناعي', stageEn: 'AI Neural Inference', percent: 92 });
-        const aiResult = await aiService.predict(sensorData);
+        socket.emit('scan_progress', {
+          stage: 'اكتملت قراءة الحساسات الثلاثة؛ لم يصدر حكم أصالة',
+          stageEn: 'Raw sensor acquisition completed; authenticity not evaluated',
+          percent: 90,
+        });
 
-        socket.emit('scan_progress', { stage: 'توليد الباركود وشهادة الفحص المخبرية الرقمية', stageEn: 'Generating Digital Certificate & QR Code', percent: 97 });
-
-        // Generate QR code data URL for instant verification on phones
-        const verifyUrl = `http://localhost:3000/verify?code=${encodeURIComponent(barcode)}`;
-        const qrCodeDataUrl = await QRCode.toDataURL(verifyUrl, { width: 220, margin: 1 });
+        const assessment = await aiService.predict(readings);
+        const appUrl = (process.env.PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/+$/, '');
+        const verificationUrl = appUrl + '/verify?code=' + encodeURIComponent(barcode);
+        const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, { width: 220, margin: 1 });
 
         const sampleRecord: HoneySampleRecord = {
           id: sampleId,
@@ -61,56 +89,77 @@ export const setupWebSockets = (server: HttpServer) => {
           barcode,
           qrCodeDataUrl,
           honeyType,
-          honeyTypeNameAr: aiResult.honeyTypeNameAr,
+          honeyTypeNameAr: assessment.honeyTypeNameAr,
           originRegion,
           shopId,
           shopName,
           testedAt: new Date().toISOString(),
-          operatorName: 'م. أحمد باصديق (كبير كيميائيي المختبر)',
-          classification: aiResult.classification,
-          confidence: aiResult.confidence,
-          qualityScore: aiResult.qualityScore,
-          isPure: aiResult.isPure,
-          chemicalAnalysis: sensorData.chemicalAnalysis,
+          operatorName: String(data?.operatorName || 'مشغل الجهاز'),
+          analysisStatus: 'NOT_EVALUATED',
+          classification: assessment.classification,
+          confidence: null,
+          qualityScore: null,
+          isPure: null,
+          chemicalAnalysis: {
+            fructose: null,
+            glucose: null,
+            sucrose: null,
+            moisture: null,
+            hmf: null,
+            density: null,
+            vocIndex: null,
+            colorSpectrumChannels: [readings.color.r, readings.color.g, readings.color.b],
+            nirPeakAbsorbance: null,
+          },
           sensorData: {
-            nirSummary: { points: 100, minWl: 1350, maxWl: 2500 },
-            vis11Channels: sensorData.visData,
-            uvResponse: sensorData.uvData,
-            thermalAverage: 25.4,
-            densityValue: sensorData.density,
-            vocGasLevel: sensorData.voc,
+            nirSummary: { points: 0, minWl: 0, maxWl: 0 },
+            vis11Channels: [],
+            uvResponse: { uva: null, uvb: null, hmfIndex: null },
+            thermalAverage: null,
+            densityValue: null,
+            vocGasLevel: null,
+            rawReadings: readings,
           },
         };
 
         const pdfUrl = await pdfService.generateReport(sampleRecord);
         sampleRecord.pdfUrl = pdfUrl;
+        await measurementRepository.create(sampleRecord);
 
-        // Persist in local database store
-        dbStore.addSample(sampleRecord);
-
+        socket.emit('scan_progress', {
+          stage: 'تم حفظ سجل القياسات والتقرير الفني',
+          stageEn: 'Measurement record and technical report saved',
+          percent: 100,
+        });
         socket.emit('scan_complete', {
-          message: 'تم الفحص المخبري بنجاح واكتملت المطابقة الطيفية 100%',
+          message: 'تم جمع قراءات RGB وUV ودرجة حرارة IR الفعلية. لم يتم تقييم نقاء العسل.',
           sampleId,
           barcode,
           qrCodeDataUrl,
-          classification: aiResult.classification,
-          honeyTypeNameAr: aiResult.honeyTypeNameAr,
-          confidence: aiResult.confidence,
-          qualityScore: aiResult.qualityScore,
-          isPure: aiResult.isPure,
-          notes: aiResult.notes,
-          chemicalAnalysis: sensorData.chemicalAnalysis,
+          analysisStatus: assessment.analysisStatus,
+          classification: assessment.classification,
+          honeyTypeNameAr: assessment.honeyTypeNameAr,
+          confidence: null,
+          qualityScore: null,
+          isPure: null,
+          notes: assessment.notes,
+          rawReadings: readings,
           pdfUrl,
           sampleRecord,
         });
-      } catch (error: any) {
-        console.error('[Socket] Scan error:', error);
-        socket.emit('scan_error', { message: error.message || 'Failed to complete scan sequence.' });
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown hardware acquisition error';
+        console.error('[Socket] Scan error: ' + message);
+        socket.emit('scan_error', { message });
+      } finally {
+        activeScans.delete(socket.id);
+        hardwareScanInProgress = false;
       }
     });
 
     socket.on('disconnect', () => {
-      console.log(`[Socket] Client disconnected: ${socket.id}`);
+      activeScans.delete(socket.id);
+      console.log('[Socket] Client disconnected: ' + socket.id);
     });
   });
 };

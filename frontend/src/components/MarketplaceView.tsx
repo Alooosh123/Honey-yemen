@@ -1,5 +1,6 @@
 "use client";
 
+import { API_BASE_URL } from '@/lib/api';
 import React, { useState, useEffect } from 'react';
 import { 
   Search, 
@@ -56,14 +57,7 @@ export default function MarketplaceView({
   const [selectedHoneyType, setSelectedHoneyType] = useState<string>('ALL');
 
   const popularDiseases = [
-    { key: 'ALL', label: 'كافة الأمراض والفوائد' },
-    { key: 'قرحة المعدة والقولون', label: 'قرحة المعدة والقولون' },
-    { key: 'الربو والحساسية الصدرية', label: 'الربو وحساسية الصدر' },
-    { key: 'فقر الدم الحاد (الأنيميا)', label: 'فقر الدم والأنيميا (الحديد)' },
-    { key: 'صديق لمرضى السكري والوقاية', label: 'صديق مرضى السكري' },
-    { key: 'تقوية المناعة ومكافحة الأورام', label: 'تقوية المناعة ومكافحة الأورام' },
-    { key: 'فيروسات الكبد وتنشيط وظائفه', label: 'صحة الكبد والفيروسات' },
-    { key: 'صحة ونمو الأطفال والمناعة', label: 'صحة ونمو الأطفال' },
+    { key: 'ALL', label: 'جميع المنتجات' },
   ];
 
   const honeyTypesList = [
@@ -87,7 +81,7 @@ export default function MarketplaceView({
       if (selectedHoneyType !== 'ALL') params.append('honeyType', selectedHoneyType);
       if (searchQuery) params.append('search', searchQuery);
 
-      const res = await fetch(`http://localhost:3001/api/marketplace/products?${params.toString()}`);
+      const res = await fetch(`${API_BASE_URL}/api/marketplace/products?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setProducts(data.products || []);
@@ -115,15 +109,15 @@ export default function MarketplaceView({
         <div className="relative z-10 max-w-3xl space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold">
             <Sparkles className="w-4 h-4 text-amber-400" />
-            <span>سوق العسل اليمني المعتمد مخبرياً | نقاء 100% موثق</span>
+            <span>سوق العسل اليمني — عرض المنتجات ذات سجلات التقييم المعتمدة فقط</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-black text-white leading-tight">
-            اختر عسلك حسب <span className="honey-gradient-text">المرض والفائدة العلاجية</span>
+            اكتشف <span className="honey-gradient-text">أنواع العسل اليمني</span>
           </h1>
 
           <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-            كل عبوة عسل معروضة خضعت للفحص المخبري بـ 6 مستشعرات متزامنة، وتحمل باركود توثيق فريد يثبت نقاءها التام وخلوها من السكر الصناعي والغش. تصفح واشترِ من أي محل معتمد مع شحن فوري.
+            لا تظهر المنتجات في السوق إلا بعد ربطها بسجل تقييم معتمد. قراءات الجهاز وحدها لا تثبت الأصالة أو التركيب الكيميائي، والعسل غذاء وليس بديلاً عن الرعاية الطبية.
           </p>
 
           {/* Quick Search Bar */}
@@ -153,13 +147,13 @@ export default function MarketplaceView({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm font-bold text-amber-400">
             <HeartPulse className="w-5 h-5" />
-            <span>تصنيف المنتجات حسب المرض المراد علاجه:</span>
+            <span>تصفية المنتجات:</span>
           </div>
           <button 
             onClick={() => onOpenEncyclopedia()} 
             className="text-xs text-amber-400 hover:underline flex items-center gap-1 font-semibold"
           >
-            <span>دليل الفوائد الطبية للعسل</span>
+            <span>دليل أنواع العسل</span>
             <ChevronLeft className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -235,10 +229,10 @@ export default function MarketplaceView({
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
 
-                  {/* Certified 100% Purity Badge */}
+                  {/* Linked record badge — it does not by itself prove authenticity. */}
                   <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-emerald-500/90 text-slate-950 font-black text-xs px-3 py-1.5 rounded-full shadow-lg backdrop-blur-md">
                     <ShieldCheck className="w-4 h-4" />
-                    <span>مفحوص وموثق 100%</span>
+                    <span>مرتبط بسجل تقييم</span>
                   </div>
 
                   {/* Weight tag */}
@@ -273,7 +267,7 @@ export default function MarketplaceView({
                   <div 
                     onClick={() => onVerifyBarcode(product.barcode)}
                     className="p-2.5 rounded-xl bg-slate-900/90 border border-amber-500/20 hover:border-amber-500/60 transition-all cursor-pointer flex items-center justify-between group/barcode"
-                    title="انقر لفحص شهادة المختبر لهذا الباركود"
+                    title="عرض سجل القياس المرتبط بهذا الرمز"
                   >
                     <div className="flex items-center gap-2">
                       <QrCode className="w-4 h-4 text-amber-400" />
@@ -282,7 +276,7 @@ export default function MarketplaceView({
                       </span>
                     </div>
                     <span className="text-[11px] text-amber-400 group-hover/barcode:underline font-semibold flex items-center gap-1">
-                      <span>عرض الشهادة</span>
+                      <span>عرض سجل القياس</span>
                       <ExternalLink className="w-3 h-3" />
                     </span>
                   </div>
@@ -291,7 +285,7 @@ export default function MarketplaceView({
                   <div className="space-y-1.5">
                     <p className="text-[11px] font-bold text-slate-400 flex items-center gap-1">
                       <HeartPulse className="w-3.5 h-3.5 text-amber-400" />
-                      <span>الأمراض والفوائد العلاجية لهذا النوع:</span>
+                      <span>ملاحظات المنتج:</span>
                     </p>
                     <div className="flex flex-wrap gap-1.5">
                       {product.treatedDiseases.map((disease, i) => (
@@ -319,11 +313,13 @@ export default function MarketplaceView({
 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => onAddToCart(product)}
-                    className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition-all transform active:scale-95"
+                    type="button"
+                    disabled
+                    title="الشراء معطل حتى اكتمال تسجيل الدخول والدفع وإدارة المخزون."
+                    className="bg-slate-800 text-slate-400 font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 cursor-not-allowed"
                   >
                     <ShoppingCart className="w-4 h-4" />
-                    <span>شراء العسل</span>
+                    <span>الشراء غير مفعّل</span>
                   </button>
                 </div>
               </div>
@@ -340,9 +336,9 @@ export default function MarketplaceView({
             <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
-            <h4 className="font-bold text-white text-base">ضمان الجودة المختبرية الصارمة بنسبة 100%</h4>
+            <h4 className="font-bold text-white text-base">معلومات الفحص والشفافية</h4>
             <p className="text-xs text-slate-400 mt-0.5">
-              إذا ثبت مخبرياً عدم مطابقة أي عبوة عسل اشتريتها للبصمة الطيفية الصادرة في الشهادة، يُسترجع كامل المبلغ فوراً.
+              يعرض النظام بيانات القياس وحالة التقييم المتاحة لكل منتج. لا تصدر المنظومة حالياً حكماً على الأصالة.
             </p>
           </div>
         </div>

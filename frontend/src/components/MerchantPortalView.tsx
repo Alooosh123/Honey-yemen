@@ -1,5 +1,6 @@
 "use client";
 
+import { API_BASE_URL } from '@/lib/api';
 import React, { useState, useEffect } from 'react';
 import { 
   Store, 
@@ -56,7 +57,7 @@ export default function MerchantPortalView({
   const fetchShopData = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`http://localhost:3001/api/shops/${shopId}`);
+      const res = await fetch(`${API_BASE_URL}/api/shops/${shopId}`);
       if (res.ok) {
         const data = await res.json();
         setShop(data.shop);
@@ -73,7 +74,7 @@ export default function MerchantPortalView({
       }
 
       // Fetch orders
-      const orderRes = await fetch('http://localhost:3001/api/marketplace/orders');
+      const orderRes = await fetch(API_BASE_URL + '/api/marketplace/orders');
       if (orderRes.ok) {
         const orderData = await orderRes.json();
         setOrders(orderData.orders || []);
@@ -109,7 +110,7 @@ export default function MerchantPortalView({
         imageUrl: formData.imageUrl,
       };
 
-      const res = await fetch(`http://localhost:3001/api/shops/${shopId}/products`, {
+      const res = await fetch(`${API_BASE_URL}/api/shops/${shopId}/products`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -302,7 +303,7 @@ export default function MerchantPortalView({
 
                   <div className="pt-2 flex items-center justify-between text-xs border-t border-slate-800/60">
                     <a
-                      href={`http://localhost:3001/api/scan/reports/${s.id}/pdf`}
+                      href={`${API_BASE_URL}/api/scan/verify/${encodeURIComponent(s.barcode)}/pdf`}
                       target="_blank"
                       rel="noreferrer"
                       className="text-amber-400 hover:underline flex items-center gap-1 font-semibold text-[11px]"

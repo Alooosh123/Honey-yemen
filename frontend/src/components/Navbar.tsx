@@ -54,13 +54,13 @@ export default function Navbar({
                   جَوْدَةُ العَسَلِ اليَمَنِي
                 </span>
                 <span className="text-[10px] uppercase font-bold tracking-widest bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">
-                  v3.0 SaaS
+                  Device Runtime v3.1
                 </span>
               </div>
               <p className="text-xs text-slate-400 flex items-center gap-2">
-                <span>المختبر الصناعي بنقاء 100% & السوق الذكي</span>
+                <span>قراءات حساسات فعلية · تقييم الأصالة غير مفعّل</span>
                 <span className="inline-block w-1 h-1 rounded-full bg-amber-400"></span>
-                <span className="text-[11px] text-amber-400/90 font-medium">Zero-Error Tolerance</span>
+                <span className="text-[11px] text-amber-400/90 font-medium">Hardware Acquisition</span>
               </p>
             </div>
           </div>
@@ -156,13 +156,13 @@ export default function Navbar({
 
               <div className="absolute left-0 mt-2 w-56 glass-panel rounded-2xl shadow-2xl p-2 border border-slate-700 hidden group-hover:block transition-all z-50">
                 <p className="text-[11px] font-bold text-slate-400 px-3 py-1.5 border-b border-slate-700/60">
-                  تبديل وضع المستخدم للتجربة:
+                  تبديل واجهة العرض فقط — لا يمنح صلاحيات:
                 </p>
                 <button
                   onClick={() => { setCurrentRole('CUSTOMER'); setActiveTab('marketplace'); }}
                   className="w-full text-right px-3 py-2 rounded-xl text-xs hover:bg-slate-800 text-slate-200 flex items-center justify-between"
                 >
-                  <span>مشتري (تصفح وشراء بالمرض)</span>
+                  <span>عميل (تصفح المنتجات)</span>
                   <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded">عميل</span>
                 </button>
                 <button
@@ -176,7 +176,7 @@ export default function Navbar({
                   onClick={() => { setCurrentRole('LAB_TECHNICIAN'); setActiveTab('lab'); }}
                   className="w-full text-right px-3 py-2 rounded-xl text-xs hover:bg-slate-800 text-slate-200 flex items-center justify-between"
                 >
-                  <span>فني المختبر (فحص الـ 6 مستشعرات)</span>
+                  <span>فني المختبر (ثلاثة حساسات فعلية)</span>
                   <span className="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded">مختبر</span>
                 </button>
                 <button

@@ -7,71 +7,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String
-  role      Role     @default(OPERATOR)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model HardwareMeasurement {
+  id             String   @id
+  batchNumber    String   @db.VarChar(80)
+  barcode        String   @unique @db.VarChar(32)
+  testedAt       DateTime
+  analysisStatus String   @default("NOT_EVALUATED") @db.VarChar(32)
+  record         Json
+  createdAt      DateTime @default(now())
 
-  reports   Final_Report[]
-}
-
-enum Role {
-  ADMIN
-  OPERATOR
-  LAB_TECHNICIAN
-}
-
-model Honey_Sample {
-  id              String   @id @default(uuid())
-  batchNumber     String   @unique
-  origin          String?
-  collectionDate  DateTime?
-  status          SampleStatus @default(PENDING)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  signature       Spectral_Signature?
-  report          Final_Report?
-}
-
-enum SampleStatus {
-  PENDING
-  ANALYZING
-  COMPLETED
-  REJECTED
-}
-
-model Spectral_Signature {
-  id              String   @id @default(uuid())
-  sampleId        String   @unique
-  sample          Honey_Sample @relation(fields: [sampleId], references: [id], onDelete: Cascade)
-  
-  // JSON fields to store array data from sensors
-  nirData         Json     // 1350-2500 nm array
-  visData         Json     // 11-channel or 288-channel
-  uvData          Json     // UVA/UVB values
-  thermalMatrix   Json     // 32x24 matrix
-  density         Float    // Load Cell + HX711 (0.01g precision)
-  vocConcentration Json    // BME688 / SGP40 values
-  
-  createdAt       DateTime @default(now())
-}
-
-model Final_Report {
-  id              String   @id @default(uuid())
-  sampleId        String   @unique
-  sample          Honey_Sample @relation(fields: [sampleId], references: [id], onDelete: Cascade)
-  
-  operatorId      String
-  operator        User     @relation(fields: [operatorId], references: [id])
-  
-  classification  String   // e.g. Sidr, Samr, Marai, Adulterated
-  confidence      Float    // Needs to be 100% threshold as per requirement
-  pdfUrl          String?  // Path/URL to the generated PDF report
-  
-  createdAt       DateTime @default(now())
+  @@index([batchNumber])
+  @@index([testedAt])
 }

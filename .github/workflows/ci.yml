@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "feat/real-hardware-runtime"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: honey_admin
+          POSTGRES_PASSWORD: honey_ci_password
+          POSTGRES_DB: honey_quality
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U honey_admin -d honey_quality"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+        working-directory: backend
+      - run: npx prisma validate
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://honey_admin:honey_ci_password@localhost:5432/honey_quality?schema=public
+      - run: npm run prisma:generate
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://honey_admin:honey_ci_password@localhost:5432/honey_quality?schema=public
+      - run: npm run prisma:migrate:deploy
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://honey_admin:honey_ci_password@localhost:5432/honey_quality?schema=public
+      - run: npm run build
+        working-directory: backend
+      - run: npm run test:db-smoke
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://honey_admin:honey_ci_password@localhost:5432/honey_quality?schema=public
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:3001
+
+  hardware-protocol:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -r hardware/requirements.txt
+      - run: python -m unittest discover -s hardware/tests -v
+
+  arduino-firmware:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: arduino/setup-arduino-cli@v2
+      - run: arduino-cli core update-index
+      - run: arduino-cli core install arduino:avr
+      - run: arduino-cli lib install "Adafruit TCS34725" "Adafruit MLX90614 Library" "Adafruit BusIO"
+      - run: arduino-cli compile --fqbn arduino:avr:uno hardware/arduino/HoneyYemenDevice
+
+  windows-startup-script:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse local startup PowerShell script
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Join-Path $PWD "scripts/start-local.ps1"),
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_.Message }
+            exit 1
+          }

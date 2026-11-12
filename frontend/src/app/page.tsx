@@ -1,5 +1,6 @@
 "use client";
 
+import { API_BASE_URL } from '@/lib/api';
 import React, { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 import Navbar from '@/components/Navbar';
@@ -30,7 +31,7 @@ export default function Home() {
   const [isSocketConnected, setIsSocketConnected] = useState(false);
 
   useEffect(() => {
-    const socket = io('http://localhost:3001');
+    const socket = io(API_BASE_URL);
 
     socket.on('connect', () => {
       setIsSocketConnected(true);
