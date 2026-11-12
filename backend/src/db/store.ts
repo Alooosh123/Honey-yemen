@@ -171,6 +171,7 @@ class DatabaseStore {
     this.dataFilePath = process.env.HONEY_DATA_FILE
       ? path.resolve(process.env.HONEY_DATA_FILE)
       : path.join(dataDir, 'honey_db.runtime.json');
+    fs.mkdirSync(path.dirname(this.dataFilePath), { recursive: true });
     this.loadOrSeed(path.join(dataDir, 'honey_db.json'));
   }
 
