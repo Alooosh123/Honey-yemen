@@ -11,7 +11,7 @@ if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
 const server = http.createServer(app);
 setupWebSockets(server);
 
-server.listen(PORT, '0.0.0.0', () => {
+server.listen(PORT, process.env.HOST || '127.0.0.1', () => {
   console.log('[Server] Honey device backend listening on port ' + PORT);
   if (!process.env.HONEY_SERIAL_PORT) {
     console.warn('[Hardware] HONEY_SERIAL_PORT is missing; real scans are disabled until configured.');
