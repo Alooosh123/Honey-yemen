@@ -1,31 +1,22 @@
 import { Router } from 'express';
-import { dbStore } from '../db/store';
 
 const router = Router();
 
-// List users for demo quick-switch
-router.get('/users', (req, res) => {
-  res.json({ users: dbStore.getUsers() });
+// Do not issue demo tokens or silently fall back to an administrator account.
+// Real authentication is intentionally fail-closed until password storage,
+// token signing, user provisioning and RBAC are connected to persistent storage.
+router.get('/users', (_req, res) => {
+  res.status(503).json({
+    error: 'AUTHENTICATION_NOT_CONFIGURED',
+    message: 'تسجيل الدخول وإدارة المستخدمين غير مفعّلين للإنتاج بعد. تم إيقاف حسابات العرض والرموز الوهمية.',
+  });
 });
 
-// Login
-router.post('/login', (req, res) => {
-  const { email, role } = req.body;
-  const users = dbStore.getUsers();
-  let user = users.find((u) => u.email === email);
-
-  if (!user && role) {
-    user = users.find((u) => u.role === role);
-  }
-
-  if (!user) {
-    user = users[0]; // fallback to admin
-  }
-
-  res.json({
-    success: true,
-    user,
-    token: `demo-jwt-token-${user.id}`,
+router.post('/login', (_req, res) => {
+  res.status(503).json({
+    success: false,
+    error: 'AUTHENTICATION_NOT_CONFIGURED',
+    message: 'لا يقبل النظام تسجيل الدخول قبل إعداد المصادقة الآمنة وحساب المدير الأول.',
   });
 });
 
