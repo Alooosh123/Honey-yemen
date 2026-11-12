@@ -75,3 +75,20 @@ model Final_Report {
   
   createdAt       DateTime @default(now())
 }
+
+model HardwareScan {
+  id              String   @id @default(uuid())
+  batchNumber     String
+  device          String
+  mode            String   @default("serial")
+  status          String   @default("MEASURED_PENDING_VALIDATION")
+  measurements    Json
+  limitations     Json
+  durationSeconds Float
+  startedAt       DateTime
+  completedAt     DateTime
+  createdAt       DateTime @default(now())
+
+  @@index([batchNumber])
+  @@index([createdAt])
+}
