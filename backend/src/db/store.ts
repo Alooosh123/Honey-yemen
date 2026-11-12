@@ -64,9 +64,9 @@ export interface HoneySampleRecord {
   sensorData: {
     nirSummary: { points: number; minWl: number; maxWl: number };
     vis11Channels: number[];
-    uvResponse: { uva: number; uvb: number; hmfIndex: number };
-    thermalAverage: number;
-    densityValue: number;
+    uvResponse: { uva: number | null; uvb: number | null; hmfIndex: number | null };
+    thermalAverage: number | null;
+    densityValue: number | null;
     vocGasLevel: number | null;
     rawReadings?: {
       color: { r: number; g: number; b: number };
