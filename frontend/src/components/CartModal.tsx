@@ -1,5 +1,6 @@
 "use client";
 
+import { API_BASE_URL } from '@/lib/api';
 import React, { useState } from 'react';
 import { 
   ShoppingBag, 
@@ -67,7 +68,7 @@ export default function CartModal({
         barcode: it.product.barcode,
       }));
 
-      const res = await fetch('http://localhost:3001/api/marketplace/orders', {
+      const res = await fetch('${API_BASE_URL}/api/marketplace/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
