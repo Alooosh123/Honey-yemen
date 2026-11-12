@@ -6,6 +6,7 @@ import authRoutes from './routes/auth.routes';
 import shopsRoutes from './routes/shops.routes';
 import marketplaceRoutes from './routes/marketplace.routes';
 import saasRoutes from './routes/saas.routes';
+import { measurementRepository } from './db/measurement.repository';
 
 const app = express();
 const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000')
@@ -40,6 +41,20 @@ app.get('/health', (_req, res) => {
     version: '3.1.0-hardware-runtime',
     hardwareConfigured: Boolean(process.env.HONEY_SERIAL_PORT),
     hardwarePortConfigured: Boolean(process.env.HONEY_SERIAL_PORT),
+    timestamp: new Date().toISOString(),
+  });
+});
+
+
+app.get('/ready', async (_req, res) => {
+  const databaseAvailable = await measurementRepository.isAvailable();
+  const hardwareConfigured = Boolean(process.env.HONEY_SERIAL_PORT);
+  const ready = databaseAvailable && hardwareConfigured;
+
+  res.status(ready ? 200 : 503).json({
+    status: ready ? 'ready' : 'not_ready',
+    database: databaseAvailable ? 'connected' : 'unavailable',
+    hardwareConfigured,
     timestamp: new Date().toISOString(),
   });
 });
