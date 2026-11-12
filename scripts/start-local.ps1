@@ -87,6 +87,93 @@ if ($rootContent -match 'CHANGE_THIS_TO_A_LONG_RANDOM_TOKEN') {
 }
 [System.IO.File]::WriteAllText($rootEnv, $rootContent, ([System.Text.UTF8Encoding]::new($false)))
 Set-EnvValue $backendEnv 'HONEY_SERIAL_PORT' $SerialPort
+$rootSettings = @{}
+foreach ($line in (Get-Content -LiteralPath $rootEnv)) {
+    if ($line -match '^([A-Z0-9_]+)=(.*)
+
+Write-Step 'Installing dependencies'
+if (-not $SkipDependencyInstall) {
+    Push-Location $backendDir
+    try { npm ci; if ($LASTEXITCODE -ne 0) { throw 'Backend npm ci failed.' } }
+    finally { Pop-Location }
+
+    Push-Location $frontendDir
+    try { npm ci; if ($LASTEXITCODE -ne 0) { throw 'Frontend npm ci failed.' } }
+    finally { Pop-Location }
+
+    Push-Location $root
+    try {
+        python -m pip install -r (Join-Path $root 'hardware\requirements.txt')
+        if ($LASTEXITCODE -ne 0) { throw 'Python serial dependencies installation failed.' }
+    }
+    finally { Pop-Location }
+}
+else {
+    Write-Host 'Dependency installation skipped by request.' -ForegroundColor Yellow
+}
+
+Write-Step 'Starting PostgreSQL and InfluxDB containers'
+Push-Location $root
+try {
+    docker compose up -d
+    if ($LASTEXITCODE -ne 0) { throw 'docker compose up failed.' }
+
+    foreach ($service in @('postgres', 'influxdb')) {
+        $healthy = $false
+        for ($attempt = 0; $attempt -lt 60; $attempt++) {
+            $containerId = docker compose ps -q $service
+            if ($containerId) {
+                $health = docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' $containerId
+                if ($health -eq 'healthy') {
+                    $healthy = $true
+                    break
+                }
+            }
+            Start-Sleep -Seconds 2
+        }
+        if (-not $healthy) { throw "Container service did not become healthy: $service" }
+        Write-Host "$service is healthy." -ForegroundColor Green
+    }
+}
+finally {
+    Pop-Location
+}
+
+Write-Step 'Applying PostgreSQL migrations'
+Push-Location $backendDir
+try {
+    npm run prisma:generate
+    if ($LASTEXITCODE -ne 0) { throw 'Prisma client generation failed.' }
+    npm run prisma:migrate:deploy
+    if ($LASTEXITCODE -ne 0) { throw 'PostgreSQL migrations failed.' }
+}
+finally {
+    Pop-Location
+}
+
+Write-Step 'Starting backend and frontend'
+$backendCommand = "Set-Location -LiteralPath '$backendDir'; npm run dev"
+$frontendCommand = "Set-Location -LiteralPath '$frontendDir'; npm run dev"
+Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoExit', '-Command', $backendCommand)
+Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoExit', '-Command', $frontendCommand)
+
+Write-Host ([Environment]::NewLine + 'Backend:  http://localhost:3001/health') -ForegroundColor Green
+Write-Host 'Frontend: http://localhost:3000' -ForegroundColor Green
+Write-Host ("Arduino:  " + $SerialPort + " at 9600 baud") -ForegroundColor Green
+Write-Host 'Close Arduino Serial Monitor before starting a scan.' -ForegroundColor Yellow
+Write-Host 'Honey authenticity classification, checkout, and merchant/admin writes remain disabled until validated science, authentication, database persistence and payment are implemented.' -ForegroundColor Yellow
+) {
+        $rootSettings[$matches[1]] = $matches[2]
+    }
+}
+foreach ($requiredKey in @('POSTGRES_USER', 'POSTGRES_PASSWORD', 'POSTGRES_DB')) {
+    if (-not $rootSettings.ContainsKey($requiredKey) -or [string]::IsNullOrWhiteSpace($rootSettings[$requiredKey])) {
+        throw "Missing $requiredKey in root .env"
+    }
+}
+$dbPassword = [System.Uri]::EscapeDataString($rootSettings['POSTGRES_PASSWORD'])
+$databaseUrl = "postgresql://$($rootSettings['POSTGRES_USER']):$dbPassword@localhost:5432/$($rootSettings['POSTGRES_DB'])?schema=public"
+Set-EnvValue $backendEnv 'DATABASE_URL' $databaseUrl
 
 Write-Step 'Installing dependencies'
 if (-not $SkipDependencyInstall) {
