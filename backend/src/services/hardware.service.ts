@@ -66,6 +66,12 @@ export class HardwareService {
       let stderrBuffer = '';
       let settled = false;
 
+      if (!child.stdout || !child.stderr) {
+        child.kill();
+        finish(new Error('Python serial bridge did not expose process streams.'));
+        return;
+      }
+
       const timer = setTimeout(() => {
         child.kill();
         finish(new Error('Hardware scan exceeded ' + (scanTimeout + 10) + ' seconds.'));
