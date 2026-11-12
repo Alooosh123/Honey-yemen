@@ -47,7 +47,7 @@ function Set-EnvValue([string]$Path, [string]$Key, [string]$Value) {
     else {
         $content += [Environment]::NewLine + $Key + "=" + $Value + [Environment]::NewLine
     }
-    Set-Content -LiteralPath $Path -Value $content -NoNewline -Encoding UTF8
+    [System.IO.File]::WriteAllText($Path, $content, (New-Object System.Text.UTF8Encoding($false)))
 }
 
 Write-Step 'Checking local requirements'
@@ -85,7 +85,7 @@ if ($rootContent -match 'CHANGE_THIS_TO_ANOTHER_LONG_RANDOM_PASSWORD') {
 if ($rootContent -match 'CHANGE_THIS_TO_A_LONG_RANDOM_TOKEN') {
     $rootContent = $rootContent.Replace('CHANGE_THIS_TO_A_LONG_RANDOM_TOKEN', (New-RandomHex 48))
 }
-Set-Content -LiteralPath $rootEnv -Value $rootContent -NoNewline -Encoding UTF8
+[System.IO.File]::WriteAllText($rootEnv, $rootContent, (New-Object System.Text.UTF8Encoding($false)))
 Set-EnvValue $backendEnv 'HONEY_SERIAL_PORT' $SerialPort
 
 Write-Step 'Installing dependencies'
