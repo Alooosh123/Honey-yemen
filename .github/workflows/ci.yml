@@ -49,6 +49,10 @@ jobs:
           DATABASE_URL: postgresql://honey_admin:honey_ci_password@localhost:5432/honey_quality?schema=public
       - run: npm run build
         working-directory: backend
+      - run: npm run test:db-smoke
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://honey_admin:honey_ci_password@localhost:5432/honey_quality?schema=public
 
   frontend:
     runs-on: ubuntu-latest
