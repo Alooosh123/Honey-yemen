@@ -29,49 +29,49 @@ const safeMeasurementRecord = (sample: any) => {
   };
 };
 
-router.get('/reports', async (_req, res) => {
-  try {
-    const persisted = await measurementRepository.list();
-    const legacyDemo = dbStore.getSamples().map(safeMeasurementRecord);
-    const reports = [...persisted.map(safeMeasurementRecord), ...legacyDemo];
-    res.status(200).json({ reports });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Measurement database unavailable';
-    res.status(503).json({
-      error: 'MEASUREMENT_DATABASE_UNAVAILABLE',
-      message: 'تعذر الاتصال بقاعدة بيانات سجلات القياس.',
-      details: message,
-    });
-  }
+const publicRecord = (sample: any) => {
+  const safe = safeMeasurementRecord(sample);
+  return {
+    id: safe.id,
+    barcode: safe.barcode,
+    batchNumber: safe.batchNumber,
+    testedAt: safe.testedAt,
+    honeyType: safe.honeyType,
+    honeyTypeNameAr: safe.honeyTypeNameAr,
+    analysisStatus: safe.analysisStatus,
+    classification: safe.classification,
+    confidence: safe.confidence,
+    qualityScore: safe.qualityScore,
+    isPure: safe.isPure,
+    sensorData: {
+      rawReadings: safe.sensorData?.rawReadings || null,
+    },
+  };
+};
+
+// Bulk and internal record APIs stay closed until authenticated RBAC is implemented.
+router.get('/reports', (_req, res) => {
+  res.status(503).json({
+    error: 'ADMIN_AUTH_REQUIRED',
+    message: 'قائمة سجلات الفحص الكاملة متاحة بعد تفعيل تسجيل الدخول وصلاحيات الإدارة.',
+  });
 });
 
-router.get('/reports/:id', async (req, res) => {
-  try {
-    const sample = await measurementRepository.findById(req.params.id)
-      || dbStore.getSampleById(req.params.id);
-    if (!sample) return res.status(404).json({ error: 'Measurement record not found' });
-    res.status(200).json({ report: safeMeasurementRecord(sample) });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Measurement database unavailable';
-    res.status(503).json({ error: 'MEASUREMENT_DATABASE_UNAVAILABLE', details: message });
-  }
+router.get('/reports/:id', (_req, res) => {
+  res.status(503).json({
+    error: 'ADMIN_AUTH_REQUIRED',
+    message: 'الوصول المباشر لسجل القياس يتطلب تسجيل دخول وصلاحيات مناسبة.',
+  });
 });
 
-router.get('/reports/:id/pdf', async (req, res) => {
-  try {
-    const sample = await measurementRepository.findById(req.params.id)
-      || dbStore.getSampleById(req.params.id);
-    if (!sample) return res.status(404).json({ error: 'Measurement record not found' });
-
-    const reportPath = await pdfService.generateReport(safeMeasurementRecord(sample));
-    res.redirect(reportPath);
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown report generation error';
-    res.status(503).json({ error: 'Failed to generate measurement report', details: message });
-  }
+router.get('/reports/:id/pdf', (_req, res) => {
+  res.status(503).json({
+    error: 'ADMIN_AUTH_REQUIRED',
+    message: 'تقارير PDF الداخلية تتطلب تسجيل دخول وصلاحيات مناسبة.',
+  });
 });
 
-// A registered barcode is not, by itself, proof of authenticity.
+// Public QR lookup returns only the limited fields needed to verify a printed record.
 router.get('/verify/:code', async (req, res) => {
   const code = String(req.params.code || '').trim();
   if (!code) {
@@ -91,25 +91,22 @@ router.get('/verify/:code', async (req, res) => {
       });
     }
 
-    const safeSample = safeMeasurementRecord(sample);
-    const status = safeSample.analysisStatus || 'DEMO';
+    const record = publicRecord(sample);
     const appUrl = (process.env.PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/+$/, '');
-    const verifyUrl = appUrl + '/verify?code=' + encodeURIComponent(safeSample.barcode);
-    const qrCodeDataUrl = safeSample.qrCodeDataUrl ||
+    const verifyUrl = appUrl + '/verify?code=' + encodeURIComponent(record.barcode);
+    const qrCodeDataUrl = sample.qrCodeDataUrl ||
       await QRCode.toDataURL(verifyUrl, { width: 220, margin: 1 });
 
-    const isVerified = status === 'VERIFIED';
+    const isVerified = record.analysisStatus === 'VERIFIED';
 
     return res.status(200).json({
       valid: true,
       registered: true,
-      analysisStatus: status,
+      analysisStatus: record.analysisStatus,
       message: isVerified
         ? 'تم العثور على سجل تقييم معتمد في النظام.'
         : 'تم العثور على سجل القياس، لكن أصالة العسل لم يتم التحقق منها. لا تعتبر هذه النتيجة شهادة نقاء.',
-      certificate: safeSample,
-      shop: null,
-      therapeuticBenefits: [],
+      certificate: record,
       qrCodeDataUrl,
     });
   } catch (error: unknown) {
@@ -119,6 +116,33 @@ router.get('/verify/:code', async (req, res) => {
       registered: false,
       error: 'MEASUREMENT_DATABASE_UNAVAILABLE',
       message: 'تعذر الاتصال بقاعدة بيانات سجلات القياس.',
+      details: message,
+    });
+  }
+});
+
+// A high-entropy barcode is required to retrieve its public technical PDF.
+router.get('/verify/:code/pdf', async (req, res) => {
+  const code = String(req.params.code || '').trim();
+  try {
+    const sample = await measurementRepository.findByBarcode(code)
+      || dbStore.getSampleByBarcode(code);
+    if (!sample) return res.status(404).json({ error: 'Measurement record not found' });
+
+    const safe = safeMeasurementRecord(sample);
+    const pdfRecord = {
+      ...safe,
+      operatorName: '',
+      shopId: '',
+      shopName: '',
+      originRegion: '',
+    };
+    const reportPath = await pdfService.generateReport(pdfRecord);
+    return res.redirect(reportPath);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown report generation error';
+    return res.status(503).json({
+      error: 'MEASUREMENT_REPORT_UNAVAILABLE',
       details: message,
     });
   }
