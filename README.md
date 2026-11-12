@@ -15,6 +15,13 @@
 ## متطلبات التشغيل على Windows
 
 1. Windows 10/11، Node.js 20، Python 3.10 أو أحدث، Docker Desktop، وتعريف CH340/Arduino.
+2. يمكن تشغيل خطوات التهيئة تلقائياً من PowerShell بعد رفع الـFirmware بالأمر التالي (استبدل COM5 برقم المنفذ الظاهر في Device Manager):
+
+   `Set-ExecutionPolicy -Scope Process Bypass`
+
+   `./scripts/start-local.ps1 -SerialPort COM5`
+
+   يقوم السكربت بإنشاء ملفات البيئة المحلية مع أسرار عشوائية عند الحاجة، وتشغيل Docker وفحص صحة قواعد البيانات، ثم فتح نافذتين للخلفية والواجهة. كما يمكن اتباع الخطوات اليدوية أدناه.
 2. صِل Arduino وتحقق من رقم المنفذ في Device Manager.
 3. أغلق Arduino Serial Monitor وأي برنامج آخر يستخدم منفذ COM.
 4. انسخ `.env.example` إلى `.env` في جذر المشروع، واستبدل كلمات مرور Docker ورمز InfluxDB بقيم قوية.
