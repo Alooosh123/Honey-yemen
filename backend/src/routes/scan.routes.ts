@@ -7,7 +7,19 @@ const router = Router();
 const pdfService = new PDFService();
 
 router.get('/reports', (_req, res) => {
-  res.status(200).json({ reports: dbStore.getSamples() });
+  const reports = dbStore.getSamples().map((sample) => {
+    if (sample.analysisStatus === 'VERIFIED') return sample;
+    return {
+      ...sample,
+      analysisStatus: sample.analysisStatus || 'DEMO',
+      classification: 'NOT_EVALUATED',
+      confidence: null,
+      qualityScore: null,
+      isPure: null,
+      chemicalAnalysis: null,
+    };
+  });
+  res.status(200).json({ reports });
 });
 
 router.get('/reports/:id', (req, res) => {
