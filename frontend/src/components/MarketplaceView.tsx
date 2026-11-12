@@ -57,14 +57,7 @@ export default function MarketplaceView({
   const [selectedHoneyType, setSelectedHoneyType] = useState<string>('ALL');
 
   const popularDiseases = [
-    { key: 'ALL', label: 'كافة الأمراض والفوائد' },
-    { key: 'قرحة المعدة والقولون', label: 'قرحة المعدة والقولون' },
-    { key: 'الربو والحساسية الصدرية', label: 'الربو وحساسية الصدر' },
-    { key: 'فقر الدم الحاد (الأنيميا)', label: 'فقر الدم والأنيميا (الحديد)' },
-    { key: 'صديق لمرضى السكري والوقاية', label: 'صديق مرضى السكري' },
-    { key: 'تقوية المناعة ومكافحة الأورام', label: 'تقوية المناعة ومكافحة الأورام' },
-    { key: 'فيروسات الكبد وتنشيط وظائفه', label: 'صحة الكبد والفيروسات' },
-    { key: 'صحة ونمو الأطفال والمناعة', label: 'صحة ونمو الأطفال' },
+    { key: 'ALL', label: 'جميع المنتجات' },
   ];
 
   const honeyTypesList = [
@@ -116,15 +109,15 @@ export default function MarketplaceView({
         <div className="relative z-10 max-w-3xl space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold">
             <Sparkles className="w-4 h-4 text-amber-400" />
-            <span>سوق العسل اليمني المعتمد مخبرياً | نقاء 100% موثق</span>
+            <span>سوق العسل اليمني — عرض المنتجات ذات سجلات التقييم المعتمدة فقط</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-black text-white leading-tight">
-            اختر عسلك حسب <span className="honey-gradient-text">المرض والفائدة العلاجية</span>
+            اكتشف <span className="honey-gradient-text">أنواع العسل اليمني</span>
           </h1>
 
           <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-            كل عبوة عسل معروضة خضعت للفحص المخبري بـ 6 مستشعرات متزامنة، وتحمل باركود توثيق فريد يثبت نقاءها التام وخلوها من السكر الصناعي والغش. تصفح واشترِ من أي محل معتمد مع شحن فوري.
+            لا تظهر المنتجات في السوق إلا بعد ربطها بسجل تقييم معتمد. قراءات الجهاز وحدها لا تثبت الأصالة أو التركيب الكيميائي، والعسل غذاء وليس بديلاً عن الرعاية الطبية.
           </p>
 
           {/* Quick Search Bar */}
@@ -154,13 +147,13 @@ export default function MarketplaceView({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm font-bold text-amber-400">
             <HeartPulse className="w-5 h-5" />
-            <span>تصنيف المنتجات حسب المرض المراد علاجه:</span>
+            <span>تصفية المنتجات:</span>
           </div>
           <button 
             onClick={() => onOpenEncyclopedia()} 
             className="text-xs text-amber-400 hover:underline flex items-center gap-1 font-semibold"
           >
-            <span>دليل الفوائد الطبية للعسل</span>
+            <span>دليل أنواع العسل</span>
             <ChevronLeft className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -239,7 +232,7 @@ export default function MarketplaceView({
                   {/* Certified 100% Purity Badge */}
                   <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-emerald-500/90 text-slate-950 font-black text-xs px-3 py-1.5 rounded-full shadow-lg backdrop-blur-md">
                     <ShieldCheck className="w-4 h-4" />
-                    <span>مفحوص وموثق 100%</span>
+                    <span>مرتبط بسجل تقييم</span>
                   </div>
 
                   {/* Weight tag */}
@@ -292,7 +285,7 @@ export default function MarketplaceView({
                   <div className="space-y-1.5">
                     <p className="text-[11px] font-bold text-slate-400 flex items-center gap-1">
                       <HeartPulse className="w-3.5 h-3.5 text-amber-400" />
-                      <span>الأمراض والفوائد العلاجية لهذا النوع:</span>
+                      <span>ملاحظات المنتج:</span>
                     </p>
                     <div className="flex flex-wrap gap-1.5">
                       {product.treatedDiseases.map((disease, i) => (
@@ -341,9 +334,9 @@ export default function MarketplaceView({
             <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
-            <h4 className="font-bold text-white text-base">ضمان الجودة المختبرية الصارمة بنسبة 100%</h4>
+            <h4 className="font-bold text-white text-base">معلومات الفحص والشفافية</h4>
             <p className="text-xs text-slate-400 mt-0.5">
-              إذا ثبت مخبرياً عدم مطابقة أي عبوة عسل اشتريتها للبصمة الطيفية الصادرة في الشهادة، يُسترجع كامل المبلغ فوراً.
+              يعرض النظام بيانات القياس وحالة التقييم المتاحة لكل منتج. لا تصدر المنظومة حالياً حكماً على الأصالة.
             </p>
           </div>
         </div>
