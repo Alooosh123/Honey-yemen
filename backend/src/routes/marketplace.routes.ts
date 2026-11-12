@@ -1,6 +1,5 @@
 import { Router } from 'express';
-import { dbStore, Order } from '../db/store';
-import { randomUUID } from 'crypto';
+import { dbStore } from '../db/store';
 
 const router = Router();
 
@@ -13,6 +12,14 @@ router.get('/products', (req, res) => {
   const shops = dbStore.getShops();
   const visibleShopIds = new Set(shops.filter((s) => s.isVisibleInSearch).map((s) => s.id));
   products = products.filter((p) => visibleShopIds.has(p.shopId));
+
+  // Never publish seed/demo products or products without a verified sample record.
+  const verifiedSampleIds = new Set(
+    dbStore.getSamples()
+      .filter((sample) => sample.analysisStatus === 'VERIFIED')
+      .map((sample) => sample.id)
+  );
+  products = products.filter((product) => verifiedSampleIds.has(product.sampleId));
 
   if (search && typeof search === 'string') {
     const q = search.toLowerCase();
@@ -47,53 +54,12 @@ router.get('/products', (req, res) => {
 });
 
 // Get catalog of all diseases and medical conditions treated by honey
-router.get('/diseases', (req, res) => {
-  const honeyTypes = dbStore.getHoneyTypes();
-  const allDiseasesSet = new Set<string>();
-
-  const diseaseMapping: { disease: string; recommendedHoneyTypes: string[] }[] = [];
-
-  honeyTypes.forEach((ht) => {
-    ht.therapeuticBenefits.forEach((b) => {
-      // Extract short disease keywords or use full benefit
-      allDiseasesSet.add(b);
-    });
+router.get('/diseases', (_req, res) => {
+  res.status(200).json({
+    categories: [],
+    rawList: [],
+    message: 'لا يقدم النظام ادعاءات بعلاج الأمراض. العسل غذاء وليس بديلاً عن التشخيص أو العلاج الطبي.',
   });
-
-  const categories = [
-    {
-      id: 'digestive',
-      nameAr: 'الجهاز الهضمي والمعدة',
-      conditions: ['قرحة المعدة والقولون', 'جرثومة المعدة (H. Pylori)', 'حموضة المعدة وسوء الهضم', 'القولون العصبي'],
-      recommendedTypes: ['عسل سدر دوعني ملكي', 'عسل سلام تهامي'],
-    },
-    {
-      id: 'respiratory',
-      nameAr: 'الجهاز التنفسي والربو',
-      conditions: ['الربو والحساسية الصدرية', 'التهاب الجيوب الأنفية والسعال', 'إذابة وطرد البلغم الرئوي', 'نزلات البرد والتهاب اللوزتين'],
-      recommendedTypes: ['عسل صال يمني حار', 'عسل سدر عصيمي فاخر'],
-    },
-    {
-      id: 'liver-blood',
-      nameAr: 'الكبد وفقر الدم (الأنيميا)',
-      conditions: ['فقر الدم الحاد (الأنيميا) ونقص الحديد', 'تنشيط وظائف الكبد وحمايته من التليف', 'فيروسات الكبد وتنشيط الإنزيمات'],
-      recommendedTypes: ['عسل سمر حضرمي نقي', 'عسل سدر دوعني ملكي'],
-    },
-    {
-      id: 'diabetes-kidney',
-      nameAr: 'السكري والكلى والمسالك',
-      conditions: ['صديق لمرضى السكري والوقاية', 'أمراض الكلى والمسالك البولية', 'تنظيم ضغط الدم والدورة الدموية'],
-      recommendedTypes: ['عسل سلام تهامي صافي'],
-    },
-    {
-      id: 'immunity-vitality',
-      nameAr: 'المناعة والخصوبة والعائلة',
-      conditions: ['تقوية المناعة ومكافحة الأورام', 'الضعف العام والخصوبة', 'صحة ونمو الأطفال والمناعة', 'محاربة الأرق واضطرابات النوم'],
-      recommendedTypes: ['عسل سدر دوعني ملكي', 'عسل مراعي جبلي طبيعي'],
-    },
-  ];
-
-  res.json({ categories, rawList: Array.from(allDiseasesSet) });
 });
 
 // Get honey types encyclopedia
@@ -102,40 +68,19 @@ router.get('/honey-types', (req, res) => {
 });
 
 // Customer Checkout / Create Order
-router.post('/orders', (req, res) => {
-  const { customerName, customerPhone, customerEmail, deliveryAddress, city, items } = req.body;
-
-  if (!items || !Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({ error: 'Order must contain at least one item' });
-  }
-
-  const totalAmount = items.reduce((sum: number, it: any) => sum + (Number(it.unitPrice) || 0) * (Number(it.quantity) || 1), 0);
-
-  const order: Order = {
-    id: `ORD-${Date.now().toString().slice(-6)}`,
-    customerName: customerName || 'مشتري كريم',
-    customerPhone: customerPhone || '+967 770 000 000',
-    customerEmail: customerEmail || 'customer@honey.io',
-    deliveryAddress: deliveryAddress || 'التسليم المباشر',
-    city: city || 'صنعاء / الرياض',
-    items,
-    totalAmount,
-    status: 'CONFIRMED',
-    orderDate: new Date().toISOString(),
-  };
-
-  dbStore.createOrder(order);
-
-  res.status(201).json({
-    success: true,
-    message: 'تم تسجيل طلب الشراء بنجاح! يتم تجهيز العبوات المفحوصة والمختومة.',
-    order,
+router.post('/orders', (_req, res) => {
+  res.status(503).json({
+    error: 'CHECKOUT_NOT_CONFIGURED',
+    message: 'إنشاء الطلبات والدفع معطلان حتى تفعيل المصادقة والتحقق من المخزون ومزود دفع فعلي.',
   });
 });
 
 // View orders
-router.get('/orders', (req, res) => {
-  res.json({ orders: dbStore.getOrders() });
+router.get('/orders', (_req, res) => {
+  res.status(503).json({
+    error: 'ORDER_ACCESS_LOCKED',
+    message: 'عرض الطلبات يتطلب مصادقة وصلاحيات مستخدم غير مفعّلة بعد.',
+  });
 });
 
 export default router;
