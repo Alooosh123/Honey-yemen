@@ -1,39 +1,43 @@
 import { Router } from 'express';
-import { dbStore, HoneyProduct } from '../db/store';
-import { randomUUID } from 'crypto';
+import { dbStore } from '../db/store';
 
 const router = Router();
 
-// Get all shops (filter by search visibility for customer storefront)
-router.get('/', (req, res) => {
-  const { visibleOnly } = req.query;
-  let shops = dbStore.getShops();
-
-  if (visibleOnly === 'true') {
-    shops = shops.filter((s) => s.isVisibleInSearch && s.subscriptionStatus === 'ACTIVE');
-  }
+// Public directory exposes only shops with at least one verified listed product.
+router.get('/', (_req, res) => {
+  const verifiedSampleIds = new Set(
+    dbStore.getSamples()
+      .filter((sample) => sample.analysisStatus === 'VERIFIED')
+      .map((sample) => sample.id)
+  );
+  const verifiedShopIds = new Set(
+    dbStore.getProducts()
+      .filter((product) => verifiedSampleIds.has(product.sampleId))
+      .map((product) => product.shopId)
+  );
+  const shops = dbStore.getShops()
+    .filter((shop) => shop.isVisibleInSearch && verifiedShopIds.has(shop.id))
+    .map((shop) => ({
+      id: shop.id,
+      name: shop.name,
+      city: shop.city,
+      region: shop.region,
+      logo: shop.logo,
+      rating: shop.rating,
+      isVerified: true,
+    }));
 
   res.json({ shops });
 });
 
-// Get shop details by ID
-router.get('/:id', (req, res) => {
-  const shop = dbStore.getShopById(req.params.id);
-  if (!shop) {
-    return res.status(404).json({ error: 'Shop not found' });
-  }
-
-  const products = dbStore.getProducts().filter((p) => p.shopId === shop.id);
-  const scans = dbStore.getSamples().filter((s) => s.shopId === shop.id);
-
-  res.json({
-    shop,
-    products,
-    scans,
+// Merchant details and all private shop records require authentication and RBAC.
+router.get('/:id', (_req, res) => {
+  res.status(503).json({
+    error: 'MERCHANT_ACCESS_LOCKED',
+    message: 'بيانات التاجر وسجلاته تتطلب تسجيل دخول وصلاحيات لم يتم تفعيلها بعد.',
   });
 });
 
-// Merchant adds product after laboratory scan
 router.post('/:id/products', (_req, res) => {
   res.status(503).json({
     error: 'PRODUCT_PUBLISHING_LOCKED',
@@ -41,7 +45,6 @@ router.post('/:id/products', (_req, res) => {
   });
 });
 
-// Toggle shop search visibility (Admin SaaS)
 router.patch('/:id/visibility', (_req, res) => {
   res.status(503).json({
     error: 'SHOP_ADMIN_LOCKED',
