@@ -17,7 +17,7 @@ class SerialBridgeParserTests(unittest.TestCase):
         kind, value = serial_bridge.parse_line("UV_DATA,227")
         self.assertEqual(kind, "uv")
         self.assertEqual(value["raw"], 227.0)
-        self.assertEqual(value["unit"], "raw_or_voltage")
+        self.assertEqual(value["unit"], "raw_adc")
 
     def test_ir_temperature(self):
         self.assertEqual(
