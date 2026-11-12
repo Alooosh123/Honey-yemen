@@ -1,0 +1,30 @@
+# Operations Status — Honey Yemen
+
+Updated: 2026-11-12
+
+## Implemented on branch feat/real-hardware-runtime
+
+- Added a pySerial bridge that opens the configured Arduino serial port, sends START, validates COLOR_DATA / UV_DATA / IR_DATA and times out instead of inventing missing readings.
+- Replaced HardwareService mock generator in the scan path with the serial bridge.
+- Replaced the current AIService result with an explicit NOT_EVALUATED response until reference data and validation exist.
+- Scan records now persist the real RGB/UV/IR measurements in the existing JSON store.
+- PDF output is a raw technical measurement report, not a fake purity or ISO compliance certificate.
+- Barcode verification now distinguishes a registered code from authenticity verification and masks legacy demo verdicts.
+- Added a dedicated /verify?code=... route.
+- Disabled demo login token issuance and unauthenticated merchant, SaaS admin, and checkout mutations.
+- Product listing is gated on a sample record explicitly marked VERIFIED.
+- Added .env examples, a safer local Docker Compose setup, hardware setup notes and CI jobs.
+
+## Not yet production-ready
+
+- The app still persists application data in backend/data/honey_db.json. PostgreSQL and InfluxDB are provisioned by Compose but application repository migration is pending.
+- Authentication, password storage, JWT/session handling, first-admin provisioning and RBAC are not implemented. Sensitive writes have been disabled rather than left open.
+- There is no final, committed Arduino firmware source in the repository. The installed firmware must conform to the documented serial protocol.
+- Physical sensor acquisition has not been exercised against the user's device in this environment.
+- TCS34725 RGB, ML-8511 UV output and MLX90614 temperature do not directly measure sugar composition, moisture, HMF, density or prove authenticity.
+- No reference sample dataset, calibration certificate, blinded validation report or approved classification model exists.
+- No payment, order fulfillment, audit trail, backup restore drill, TLS deployment or production monitoring has been completed.
+
+## Release gate
+
+Do not expose the backend publicly or issue an authenticity certificate until persistence migration, authentication/RBAC, physical hardware tests, scientific validation, security review and end-to-end deployment checks pass.
