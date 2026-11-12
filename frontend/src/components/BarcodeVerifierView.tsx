@@ -112,7 +112,7 @@ export default function BarcodeVerifierView({
               </div>
             </div>
             <a
-              href={API_BASE_URL + '/api/scan/reports/' + encodeURIComponent(certificate.id) + '/pdf'}
+              href={API_BASE_URL + '/api/scan/verify/' + encodeURIComponent(certificate.barcode) + '/pdf'}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 rounded-xl bg-slate-800 px-4 py-3 text-xs font-bold text-amber-300"
