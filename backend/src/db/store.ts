@@ -24,12 +24,12 @@ export interface HoneyTypeInfo {
   therapeuticBenefits: string[];
   recommendedUses: string[];
   standardCharacteristics: {
-    fructose: number; // %
-    glucose: number;  // %
-    sucrose: number;  // %
-    moisture: number; // %
+    fructose: number | null; // %
+    glucose: number | null;  // %
+    sucrose: number | null;  // %
+    moisture: number | null; // %
     hmfMax: number;   // mg/kg
-    density: number;  // g/cm3
+    density: number | null;  // g/cm3
   };
 }
 
@@ -45,20 +45,21 @@ export interface HoneySampleRecord {
   shopName: string;
   testedAt: string;
   operatorName: string;
+  analysisStatus?: 'NOT_EVALUATED' | 'VERIFIED' | 'REJECTED' | 'DEMO';
   classification: string;
-  confidence: number;
-  qualityScore: number; // e.g. 99.8%
-  isPure: boolean;
+  confidence: number | null;
+  qualityScore: number | null;
+  isPure: boolean | null;
   chemicalAnalysis: {
     fructose: number;
     glucose: number;
     sucrose: number;
     moisture: number;
-    hmf: number;
+    hmf: number | null;
     density: number;
-    vocIndex: number;
+    vocIndex: number | null;
     colorSpectrumChannels: number[];
-    nirPeakAbsorbance: number;
+    nirPeakAbsorbance: number | null;
   };
   sensorData: {
     nirSummary: { points: number; minWl: number; maxWl: number };
@@ -66,7 +67,14 @@ export interface HoneySampleRecord {
     uvResponse: { uva: number; uvb: number; hmfIndex: number };
     thermalAverage: number;
     densityValue: number;
-    vocGasLevel: number;
+    vocGasLevel: number | null;
+    rawReadings?: {
+      color: { r: number; g: number; b: number };
+      uv: { raw: number; unit: string };
+      ir: { temperatureC: number };
+      acquiredAt: string;
+      device: { port: string; baudRate: number };
+    };
   };
   pdfUrl?: string;
 }
