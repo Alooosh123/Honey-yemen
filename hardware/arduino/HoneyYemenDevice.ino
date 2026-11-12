@@ -127,7 +127,6 @@ void performScan() {
 void setup() {
   Serial.begin(SERIAL_BAUD);
   Wire.begin();
-  analogReadResolution(10);  // Arduino Uno ADC is 10-bit; supported by AVR core.
 
   colorReady = colorSensor.begin();
   irReady = irSensor.begin();
