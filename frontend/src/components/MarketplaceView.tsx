@@ -229,7 +229,7 @@ export default function MarketplaceView({
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
 
-                  {/* Certified 100% Purity Badge */}
+                  {/* Linked record badge — it does not by itself prove authenticity. */}
                   <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-emerald-500/90 text-slate-950 font-black text-xs px-3 py-1.5 rounded-full shadow-lg backdrop-blur-md">
                     <ShieldCheck className="w-4 h-4" />
                     <span>مرتبط بسجل تقييم</span>
@@ -267,7 +267,7 @@ export default function MarketplaceView({
                   <div 
                     onClick={() => onVerifyBarcode(product.barcode)}
                     className="p-2.5 rounded-xl bg-slate-900/90 border border-amber-500/20 hover:border-amber-500/60 transition-all cursor-pointer flex items-center justify-between group/barcode"
-                    title="انقر لفحص شهادة المختبر لهذا الباركود"
+                    title="عرض سجل القياس المرتبط بهذا الرمز"
                   >
                     <div className="flex items-center gap-2">
                       <QrCode className="w-4 h-4 text-amber-400" />
@@ -276,7 +276,7 @@ export default function MarketplaceView({
                       </span>
                     </div>
                     <span className="text-[11px] text-amber-400 group-hover/barcode:underline font-semibold flex items-center gap-1">
-                      <span>عرض الشهادة</span>
+                      <span>عرض سجل القياس</span>
                       <ExternalLink className="w-3 h-3" />
                     </span>
                   </div>
@@ -313,11 +313,13 @@ export default function MarketplaceView({
 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => onAddToCart(product)}
-                    className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition-all transform active:scale-95"
+                    type="button"
+                    disabled
+                    title="الشراء معطل حتى اكتمال تسجيل الدخول والدفع وإدارة المخزون."
+                    className="bg-slate-800 text-slate-400 font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 cursor-not-allowed"
                   >
                     <ShoppingCart className="w-4 h-4" />
-                    <span>شراء العسل</span>
+                    <span>الشراء غير مفعّل</span>
                   </button>
                 </div>
               </div>
