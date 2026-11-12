@@ -1,17 +1,32 @@
+import 'dotenv/config';
 import http from 'http';
-import dotenv from 'dotenv';
 import app from './app';
 import { setupWebSockets } from './sockets';
 
-dotenv.config();
-
-const PORT = process.env.PORT || 3001;
+const PORT = Number(process.env.PORT || 3001);
+if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
+  throw new Error('PORT must be a valid TCP port.');
+}
 
 const server = http.createServer(app);
-
-// Initialize WebSockets
 setupWebSockets(server);
 
-server.listen(PORT, () => {
-  console.log(`[Server] Honey Quality Assessment System backend listening on port ${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log('[Server] Honey device backend listening on port ' + PORT);
+  if (!process.env.HONEY_SERIAL_PORT) {
+    console.warn('[Hardware] HONEY_SERIAL_PORT is missing; real scans are disabled until configured.');
+  }
 });
+
+const shutdown = (signal: string) => {
+  console.log('[Server] Received ' + signal + ', closing HTTP server.');
+  server.close((error) => {
+    if (error) {
+      console.error('[Server] Shutdown failed:', error);
+      process.exitCode = 1;
+    }
+  });
+};
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
