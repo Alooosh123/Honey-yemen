@@ -68,7 +68,7 @@ export default function CartModal({
         barcode: it.product.barcode,
       }));
 
-      const res = await fetch('${API_BASE_URL}/api/marketplace/orders', {
+      const res = await fetch(API_BASE_URL + '/api/marketplace/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
