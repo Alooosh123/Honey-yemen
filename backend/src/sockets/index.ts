@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { HttpServer } from 'http';
+import { Server as HttpServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import QRCode from 'qrcode';
 import { HardwareService } from '../services/hardware.service';
