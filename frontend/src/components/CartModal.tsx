@@ -39,10 +39,6 @@ export default function CartModal({
   onClearCart,
   onVerifyBarcode,
 }: CartModalProps) {
-  const [customerName, setCustomerName] = useState('سالم الكندي');
-  const [customerPhone, setCustomerPhone] = useState('+967 771 234 567');
-  const [customerCity, setCustomerCity] = useState('صنعاء');
-  const [deliveryAddress, setDeliveryAddress] = useState('شارع الستين - جوار مجمع النخبة');
   const [loading, setLoading] = useState(false);
   const [orderConfirmation, setOrderConfirmation] = useState<any>(null);
 
@@ -53,45 +49,6 @@ export default function CartModal({
     0
   );
 
-  const handleCheckoutSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (cartItems.length === 0) return;
-
-    try {
-      setLoading(true);
-      const itemsPayload = cartItems.map((it) => ({
-        productId: it.product.id,
-        productName: it.product.nameAr,
-        honeyType: it.product.honeyTypeId,
-        quantity: it.quantity,
-        unitPrice: it.product.price,
-        barcode: it.product.barcode,
-      }));
-
-      const res = await fetch(API_BASE_URL + '/api/marketplace/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerName,
-          customerPhone,
-          customerEmail: 'customer@honey.io',
-          city: customerCity,
-          deliveryAddress,
-          items: itemsPayload,
-        }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setOrderConfirmation(data.order);
-        onClearCart();
-      }
-    } catch (err) {
-      console.error('Error placing order:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
@@ -104,8 +61,8 @@ export default function CartModal({
               <ShoppingBag className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-white text-lg">سلة شراء العسل الموثق</h3>
-              <p className="text-xs text-slate-400">عبوات أصلية 100% مصحوبة بشهادة الفحص المخبري</p>
+              <h3 className="font-bold text-white text-lg">قائمة المنتجات المختارة</h3>
+              <p className="text-xs text-slate-400">الشراء والدفع غير متاحين في هذه النسخة حتى اكتمال الربط الفعلي</p>
             </div>
           </div>
 
@@ -236,80 +193,13 @@ export default function CartModal({
               </div>
             </div>
 
-            {/* Customer Details Form */}
-            <form onSubmit={handleCheckoutSubmit} className="space-y-4 text-xs pt-2 border-t border-slate-800">
-              <h4 className="font-bold text-white text-xs flex items-center gap-1.5">
-                <Truck className="w-4 h-4 text-amber-400" />
-                <span>بيانات الشحن والتسليم المباشر:</span>
-              </h4>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-400 font-semibold mb-1">اسم المشتري الكريم:</label>
-                  <input
-                    type="text"
-                    required
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-white outline-none focus:ring-1 focus:ring-amber-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-400 font-semibold mb-1">رقم الهاتف / الواتساب:</label>
-                  <input
-                    type="text"
-                    required
-                    value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-white outline-none focus:ring-1 focus:ring-amber-500 font-mono"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-400 font-semibold mb-1">المدينة / المحافظة:</label>
-                  <input
-                    type="text"
-                    required
-                    value={customerCity}
-                    onChange={(e) => setCustomerCity(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-white outline-none focus:ring-1 focus:ring-amber-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-400 font-semibold mb-1">عنوان التوصيل التفصيلي:</label>
-                  <input
-                    type="text"
-                    required
-                    value={deliveryAddress}
-                    onChange={(e) => setDeliveryAddress(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-white outline-none focus:ring-1 focus:ring-amber-500"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-3 flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2.5 bg-slate-800 text-slate-300 rounded-xl text-xs font-semibold"
-                >
-                  متابعة التسوق
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-8 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl text-xs shadow-xl shadow-amber-500/20 disabled:opacity-50"
-                >
-                  {loading ? 'جاري تأكيد الطلب...' : 'تأكيد الشراء الفوري (نقاء 100%)'}
-                </button>
-              </div>
-            </form>
-
+            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 space-y-2">
+              <h4 className="font-black text-amber-200 text-sm">إتمام الشراء غير مفعّل حالياً</h4>
+              <p className="text-xs text-amber-100/90 leading-relaxed">
+                تم إيقاف إنشاء الطلبات حتى يتم إعداد تسجيل دخول حقيقي، وربط الدفع والمخزون والشحن، وإتاحة المنتجات المرتبطة بسجلات تقييم معتمدة. لا يتم إرسال بيانات شخصية أو حجز منتجات من هذه الشاشة.
+              </p>
+              <button type="button" onClick={onClose} className="mt-2 px-4 py-2 bg-slate-800 rounded-lg text-xs text-white">إغلاق</button>
+            </div>
           </div>
         )}
 
