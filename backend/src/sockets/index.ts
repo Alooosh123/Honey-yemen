@@ -6,6 +6,7 @@ import { HardwareService } from '../services/hardware.service';
 import { AIService } from '../services/ai.service';
 import { PDFService } from '../services/pdf.service';
 import { dbStore, HoneySampleRecord } from '../db/store';
+import { measurementRepository } from '../db/measurement.repository';
 
 export let io: Server;
 const aiService = new AIService();
@@ -119,7 +120,7 @@ export const setupWebSockets = (server: HttpServer) => {
 
         const pdfUrl = await pdfService.generateReport(sampleRecord);
         sampleRecord.pdfUrl = pdfUrl;
-        dbStore.addSample(sampleRecord);
+        await measurementRepository.create(sampleRecord);
 
         socket.emit('scan_progress', {
           stage: 'تم حفظ سجل القياسات والتقرير الفني',
