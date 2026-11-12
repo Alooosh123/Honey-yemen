@@ -59,6 +59,10 @@ export const setupWebSockets = (server: HttpServer) => {
       const barcode = 'HNY-' + randomUUID().replace(/-/g, '').slice(0, 16).toUpperCase();
 
       try {
+        if (!(await measurementRepository.isAvailable())) {
+          throw new Error('PostgreSQL is not ready. The scan was not started to avoid losing physical sensor measurements.');
+        }
+
         const hardwareService = new HardwareService();
         const readings = await hardwareService.acquireScan(socket, {
           batchNumber,
