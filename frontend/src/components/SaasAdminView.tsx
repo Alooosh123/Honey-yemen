@@ -37,14 +37,14 @@ export default function SaasAdminView() {
   const fetchSaasData = async () => {
     try {
       setLoading(true);
-      const res = await fetch('${API_BASE_URL}/api/saas/stats');
+      const res = await fetch(API_BASE_URL + '/api/saas/stats');
       if (res.ok) {
         const data = await res.json();
         setStats(data.stats);
         setShops(data.shops || []);
       }
 
-      const planRes = await fetch('${API_BASE_URL}/api/saas/plans');
+      const planRes = await fetch(API_BASE_URL + '/api/saas/plans');
       if (planRes.ok) {
         const planData = await planRes.json();
         setPlans(planData.plans || []);
@@ -58,7 +58,7 @@ export default function SaasAdminView() {
 
   const handleToggleVisibility = async (shopId: string, currentVisibility: boolean) => {
     try {
-      const res = await fetch('${API_BASE_URL}/api/saas/toggle-visibility', {
+      const res = await fetch(API_BASE_URL + '/api/saas/toggle-visibility', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ shopId, isVisible: !currentVisibility }),
@@ -77,7 +77,7 @@ export default function SaasAdminView() {
     if (!selectedShopForRenewal) return;
 
     try {
-      const res = await fetch('${API_BASE_URL}/api/saas/subscribe', {
+      const res = await fetch(API_BASE_URL + '/api/saas/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
