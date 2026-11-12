@@ -9,7 +9,9 @@
     "build": "tsc",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
-    "prestart": "npm run build"
+    "prestart": "npm run prisma:generate && npm run prisma:migrate:deploy && npm run build",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "predev": "npm run prisma:generate && npm run prisma:migrate:deploy"
   },
   "dependencies": {
     "@influxdata/influxdb-client": "^1.33.2",
