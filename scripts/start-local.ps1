@@ -47,7 +47,7 @@ function Set-EnvValue([string]$Path, [string]$Key, [string]$Value) {
     else {
         $content += [Environment]::NewLine + $Key + "=" + $Value + [Environment]::NewLine
     }
-    [System.IO.File]::WriteAllText($Path, $content, (New-Object System.Text.UTF8Encoding($false)))
+    [System.IO.File]::WriteAllText($Path, $content, ([System.Text.UTF8Encoding]::new($false)))
 }
 
 Write-Step 'Checking local requirements'
