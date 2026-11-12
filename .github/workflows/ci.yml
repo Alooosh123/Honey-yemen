@@ -63,3 +63,22 @@ jobs:
       - run: arduino-cli core install arduino:avr
       - run: arduino-cli lib install "Adafruit TCS34725" "Adafruit MLX90614 Library" "Adafruit BusIO"
       - run: arduino-cli compile --fqbn arduino:avr:uno hardware/arduino/HoneyYemenDevice
+
+  windows-startup-script:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse local startup PowerShell script
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Join-Path $PWD "scripts/start-local.ps1"),
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_.Message }
+            exit 1
+          }
