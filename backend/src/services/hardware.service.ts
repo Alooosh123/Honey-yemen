@@ -75,8 +75,10 @@ export class HardwareService {
         if (settled) return;
         settled = true;
         clearTimeout(timer);
-        if (error) reject(error);
-        else if (result) resolve(result);
+        if (error) {
+          child.kill();
+          reject(error);
+        } else if (result) resolve(result);
         else reject(new Error('Hardware bridge exited without a completed measurement set.'));
       };
 
